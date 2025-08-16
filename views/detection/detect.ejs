@@ -1,0 +1,156 @@
+<% layout("/layouts/boilerplate") %>
+  <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.6.2/dist/dotlottie-wc.js" type="module"></script>
+  <style>
+    .outputdiv {
+      padding: 1rem;
+      border: 1px dashed var(--primary-color);
+      border-radius: 8px;
+      background-color: var(--primary-color-light);
+      color: var(--primary-color);
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin: 5rem 15rem;
+      max-height: 100vh;
+      overflow: auto;
+      scrollbar-color: teal transparent;
+      scrollbar-width: thin;
+      margin-bottom: 5rem;
+      z-index: 1;
+    }
+
+    #predicted_output {
+      font-size: 30px;
+      font-weight: bold;
+    }
+
+    #loader {
+      position: fixed;
+      top: 50%;
+      left: 56%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      /* Ensure it's on top of other content */
+    }
+  </style>
+  <div id="loader" style="display: none;">
+    <dotlottie-wc src="https://lottie.host/515eec98-052e-4403-be70-f00966a0cdb0/UxiWC6Yoyt.lottie"
+      style="width: 250px;height: 150px" speed="1" autoplay loop></dotlottie-wc>
+  </div>
+  <section class="home" id="home">
+    <div class="community-head">
+      <div class="text">Disease Detection</div>
+    </div>
+    <!-- <img class="new-img" src="images/pine-leaf.png" alt="Decorative Leaf " /> -->
+
+    <div class="outer-ulpoder">
+      <form action="/detect" enctype="multipart/form-data" class="plant-img-upload" id="plant-img-upload">
+        <div class="form-div">
+          <input class="uploader" onchange="loadFile(event)" name="uploadedImage" type="file" id="uploader"
+            style="display: none;" />
+          <label for="uploader">
+            <div class="uploaded-div">
+              <img class="detection-upload-img" src="https://cdn-icons-png.flaticon.com/256/4608/4608179.png" />
+              <span>Upload an image</span>
+              <span class="browse-btn">Browse</span>
+            </div>
+          </label>
+        </div>
+        <button type="submit" class="predict-btn">Predict</button>
+      </form>
+      <div class="preview">
+        <p id="preview-text">Preview Image</p>
+        <div class="img-preview">
+          <img id="output" style="display: none;" />
+        </div>
+      </div>
+
+    </div>
+    <div class="outputdiv">
+      <div id="predicted_output"></div>
+      <div id="cure_precautions"></div>
+
+    </div>
+    <img class="pooted-tree" src="images/potted-tree.png">
+
+  </section>
+
+  <script>
+    // Fixed frontend JavaScript with proper error handling and field name matching
+
+    var loadFile = function (event) {
+      var image = document.getElementById('output');
+      image.src = URL.createObjectURL(event.target.files[0]);
+      image.style.display = "inline";
+      // Clear previous results
+      document.getElementById("predicted_output").innerHTML = "";
+      document.getElementById("cure_precautions").innerHTML = "";
+    };
+
+    document.getElementById("plant-img-upload").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const fileInput = document.getElementById("uploader");
+
+      // Check if file is selected
+      if (!fileInput.files[0]) {
+        alert("Please select an image first!");
+        return;
+      }
+
+      const formData = new FormData();
+      // Use 'uploadedImage' to match your Node.js route
+      formData.append("uploadedImage", fileInput.files[0]);
+
+      console.log("Sending file:", fileInput.files[0].name);
+
+      const loader = document.getElementById('loader');
+      const home = document.getElementById('home');
+
+      // Show loader
+      loader.style.display = 'block';
+      home.style.opacity = '0.3';
+
+      try {
+        const response = await fetch("/detect", {
+          method: "POST",
+          body: formData,
+        });
+
+        console.log("Response status:", response.status);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Full result object:", result);
+
+        // Check if result has the expected properties
+        if (result.error) {
+          throw new Error(result.error);
+        }
+
+        if (result.predicted_disease) {
+          document.getElementById("predicted_output").innerHTML = `Predicted Disease: ${result.predicted_disease}`;
+
+          // Handle cure and precaution text
+          const cureText = result.cure_and_precaution || result.cure_and_precautions || "No treatment information available";
+          document.getElementById("cure_precautions").innerHTML = `<strong>Cure and Precautions:</strong><br><br>${cureText.replace(/\n/g, '<br>')}`;
+        } else {
+          throw new Error("Invalid response format - missing predicted_disease");
+        }
+
+      } catch (err) {
+        console.error("Upload failed:", err);
+        document.getElementById("predicted_output").innerHTML = "Error: " + err.message;
+        document.getElementById("cure_precautions").innerHTML = "";
+
+        // Show user-friendly error message
+        alert("Prediction failed: " + err.message);
+      } finally {
+        // Hide loader
+        loader.style.display = 'none';
+        home.style.opacity = '1';
+      }
+    });
+  </script>

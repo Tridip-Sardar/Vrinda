@@ -1,0 +1,86 @@
+<% layout("/layouts/boilerplate") %>
+
+  <section class="home">
+    <img class="fertilize-img" src="images/rightimg.png">
+    <div class="community-head">
+      <div class="text">Fertilizer Calculator</div>
+    </div>
+    <!-- <img
+    src="images/newleaf.png"
+    style="position: fixed; transform: rotate(-35deg); right: -8rem; top: 1rem"
+  />
+  <img
+    src="images/newleaf.png"
+    style="position: fixed; transform: rotate(-5deg); right: -3rem; top: 0"
+  />
+  <img
+    src="images/newleaf.png"
+    style="position: fixed; transform: rotate(20deg); right: -2rem; top: -3rem"
+  /> -->
+
+    <!-- fertilizer.ejs -->
+    <form id="fertilizerForm">
+      <div class="each-col">
+        <label>Plant:</label>
+        <input type="text" name="plant" placeholder="Eg. tomato" required />
+
+        <label>Growth Stage:</label>
+        <input type="text" name="growthStage" placeholder="Eg. flowering" required />
+
+        <label>If plant has any Disease:</label>
+        <input type="text" name="disease" placeholder="Eg. rust" />
+      </div>
+      <div class="each-col" style="margin-left: 4rem">
+        <!-- <p class="soil-data">If you have Soil Data</p> -->
+        <label>Nitrogen(N):</label>
+        <input type="number" name="soilN" placeholder="Eg. 20" />
+
+        <label>Phosphorus(P):</label>
+        <input type="number" name="soilP" placeholder="Eg. 6" />
+
+        <label>Potassium(K):</label>
+        <input type="number" name="soilK" placeholder="Eg. 10" />
+      </div>
+      <button type="submit" class="recommenBtn">Get Recommendation</button>
+    </form>
+
+    <div id="result-div">
+      <span id="resN"></span>
+      <span id="resP"></span>
+      <span id="resK"></span>
+    </div>
+    <img class="pooted-tree" src="images/potted-tree.png">
+  </section>
+
+  <script>
+    document
+      .getElementById("fertilizerForm")
+      .addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const plant = this.plant.value;
+        const growthStage = this.growthStage.value;
+        const disease = this.disease.value || null;
+        const soilData = {
+          N: parseFloat(this.soilN.value) || 0,
+          P: parseFloat(this.soilP.value) || 0,
+          K: parseFloat(this.soilK.value) || 0,
+        };
+
+        const response = await fetch("/fertilizer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plant, growthStage, disease, soilData }),
+        });
+
+        const result = await response.json();
+
+        let resN = JSON.stringify(result.N);
+        let resP = JSON.stringify(result.P);
+        let resK = JSON.stringify(result.K);
+
+        document.getElementById("resN").innerText = `Nitrogen(N): ${resN}`;
+        document.getElementById("resP").innerText = `Phosphorus(P): ${resP}`;
+        document.getElementById("resK").innerText = `Potassium(K): ${resK}`;
+      }); 
+  </script>

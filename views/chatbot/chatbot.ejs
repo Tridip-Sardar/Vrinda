@@ -1,0 +1,93 @@
+<% layout("/layouts/boilerplate") %>
+  <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.6.2/dist/dotlottie-wc.js" type="module"></script>
+  <style>
+    #OutPut-data {
+      padding: 1rem;
+      border: 1px dashed var(--primary-color);
+      border-radius: 8px;
+      background-color: var(--primary-color-light);
+      color: var(--primary-color);
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin: 2rem 15rem;
+      max-height: 500vh;
+      overflow: auto;
+      scrollbar-color: teal transparent;
+      scrollbar-width: thin;
+      margin-bottom: 5rem;
+    }
+
+    #loader {
+      position: fixed;
+      top: 50%;
+      left: 55%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      /* Ensure it's on top of other content */
+    }
+  </style>
+
+  <div id="loader" style="display: none">
+    <!-- <img id="loading-img" src="images/Sandy Loading.gif" alt="Loading..."> -->
+    <dotlottie-wc src="https://lottie.host/515eec98-052e-4403-be70-f00966a0cdb0/UxiWC6Yoyt.lottie"
+      style="width: 250px; height: 150px" speed="1" autoplay loop></dotlottie-wc>
+  </div>
+
+  <section class="home" id="home">
+    <!-- <img class="fertilize-img" src="images/rightimg.png" style="right: -45px; z-index: 0;"> -->
+
+    <div class="community-head">
+      <div class="text">Chatbot</div>
+    </div>
+
+    <h3 style="margin: 1rem 15rem; color: teal">Ask anything about plant</h3>
+    <form id="user-input" name="text" action="/gemini" method="POST">
+      <input name="text" placeholder="Type here.." />
+      <button type="submit" class="askButton">Ask</button>
+    </form>
+
+    <div id="OutPut-data"></div>
+    <img class="pooted-tree" src="images/potted-tree.png" />
+  </section>
+
+  <script>
+    document
+      .getElementById("user-input")
+      .addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const userInput = this.text.value;
+        console.log(userInput);
+
+        const loader = document.getElementById("loader");
+        const home = document.getElementById("home");
+        loader.style.display = "block";
+        home.style.opacity = "0.3";
+
+        try {
+          const response = await fetch("/gemini", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: userInput }),
+          });
+
+          if (!response.ok) {
+            document.getElementById("OutPut-data").innerText =
+              "Error: " + response.statusText;
+            return;
+          }
+
+          const result = await response.text();
+          console.log(result);
+
+          // Display chatbot response with custom styling
+          document.getElementById("OutPut-data").innerHTML = result;
+        } catch (error) {
+          console.error("Error:", error);
+          document.getElementById("OutPut-data").innerHTML =
+            "An error occurred while fetching data.";
+        } finally {
+          loader.style.display = "none";
+          home.style.opacity = "1";
+        }
+      });
+  </script>

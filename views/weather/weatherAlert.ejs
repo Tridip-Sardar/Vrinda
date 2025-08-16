@@ -1,0 +1,77 @@
+<% layout("/layouts/boilerplate") %>
+
+<section class="home">
+  <img class="fertilize-img" src="images/rightimg.png">
+
+  <div class="community-head">
+    <div class="text">Weather Alert</div>
+  </div>
+  
+
+  <h3 class="heading-weather">Enter city name to get precautions</h3>
+  <form class="weather-form" id="weather-form" action="/alert" method="POST">
+    <input name="city" placeholder="Enter City.." />
+    <button>Submit</button>
+  </form>
+
+  <div id="OutPut-data">
+    <div>
+      <p id="tempAlert"></p>
+      <ul id="tempMsg"></ul>
+    </div>
+    <div>
+      <p id="humAlert"></p>
+      <ul id="humMsg"></ul>
+    </div>
+    <div>
+      <p id="rainAlert"></p>
+      <ul id="rainMsg"></ul>
+    </div>
+  </div>
+  <img class="pooted-tree" src="images/potted-tree.png">
+
+</section>
+
+<script>
+  document
+    .getElementById("weather-form")
+    .addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const city = this.city.value;
+
+      try {
+        const response = await fetch("/alert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ city }),
+        });
+
+        if (!response.ok) {
+          document.getElementById("OutPut-data").innerText =
+            "Error: " + response.statusText;
+          return;
+        }
+
+        const result = await response.json();
+
+        document.getElementById("tempAlert").innerText = result.tempAlert;
+        const list = document.getElementById("tempMsg");
+        list.innerText = `${result.tempmsg ? result.tempmsg.join("\n") : ""} `;
+
+        document.getElementById("humAlert").innerText = result.humAlert;
+        const list2 = document.getElementById("humMsg");
+        list2.innerText = `${result.humMsg ? result.humMsg.join("\n") : ""} `;
+
+        document.getElementById("rainAlert").innerText = `${result.rainAlert ? result.rainAlert : ""} `;
+
+        const list3 = document.getElementById("rainMsg");
+        list3.innerText = `${result.rainMsg ? result.rainMsg.join("\n") : ""} `;
+
+      } catch (error) {
+        console.error("Error:", error);
+        document.getElementById("OutPut-data").innerText =
+          "An error occurred while fetching weather data.";
+      }
+    });
+</script>
